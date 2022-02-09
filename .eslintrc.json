@@ -1,0 +1,19 @@
+{
+  "env": {
+    "browser": true,
+    "es6": true,
+    "node": true,
+    "mocha": true
+  },
+  "extends": ["plugin:@typescript-eslint/recommended", "plugin:prettier/recommended"],
+  "parserOptions": {
+    "ecmaVersion": 2015
+  },
+  "plugins": ["eslint-plugin-tsdoc"],
+  "rules": {
+    "tsdoc/syntax": "warn",
+    "@typescript-eslint/no-inferrable-types": "off",
+    "no-console": "warn",
+    "arrow-parens": "warn"
+  }
+}

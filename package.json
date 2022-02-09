@@ -1,0 +1,128 @@
+{
+  "_args": [
+    [
+      "@stm32/stm32cubemonitor-elfparser@1.2.0",
+      "/local/home/frq09421/git/electron"
+    ]
+  ],
+  "_from": "@stm32/stm32cubemonitor-elfparser@1.2.0",
+  "_id": "@stm32/stm32cubemonitor-elfparser@1.2.0",
+  "_inBundle": false,
+  "_integrity": "sha512-3UeEU1dhN77jkkEG498w7WjTL5OzxHfr3IK2JDE577NibrozuF+RstIyvnQt4jQNbqZR2WIVL9sBnQfXnbGDjg==",
+  "_location": "/@stm32/stm32cubemonitor-elfparser",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "version",
+    "registry": true,
+    "raw": "@stm32/stm32cubemonitor-elfparser@1.2.0",
+    "name": "@stm32/stm32cubemonitor-elfparser",
+    "escapedName": "@stm32%2fstm32cubemonitor-elfparser",
+    "scope": "@stm32",
+    "rawSpec": "1.2.0",
+    "saveSpec": null,
+    "fetchSpec": "1.2.0"
+  },
+  "_requiredBy": [
+    "/@stm32/node-red-contrib-stm32cubemonitor"
+  ],
+  "_resolved": "http://10.201.21.238:4873/@stm32%2fstm32cubemonitor-elfparser/-/stm32cubemonitor-elfparser-1.2.0.tgz",
+  "_spec": "1.2.0",
+  "_where": "/local/home/frq09421/git/electron",
+  "author": {
+    "name": "STMicroelectronics"
+  },
+  "copyright": "STMicroelectronics",
+  "dependencies": {
+    "@rauschma/stringio": "^1.4.0",
+    "@stm32/stm32cubemonitor-logger": "^1.0.5",
+    "path": "^0.12.7"
+  },
+  "description": "This module provides services to parse elf files (used for STM32) and to return list of global variables",
+  "devDependencies": {
+    "@commitlint/cli": "^13.1.0",
+    "@commitlint/config-conventional": "13.1.0",
+    "@types/chai": "^4.2.21",
+    "@types/mocha": "^9.0.0",
+    "@types/node": "^14.14.22",
+    "@types/sinon": "^10.0.2",
+    "@typescript-eslint/eslint-plugin": "^4.29.1",
+    "@typescript-eslint/parser": "^4.29.1",
+    "chai": "^4.3.4",
+    "concurrently": "6.2.1",
+    "eslint": "^7.32.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^3.4.0",
+    "eslint-plugin-tsdoc": "^0.2.14",
+    "husky": "^4.3.8",
+    "lint-staged": "^11.1.2",
+    "mocha": "^9.0.3",
+    "nyc": "^15.1.0",
+    "prettier": "1.19.1",
+    "sinon": "^11.1.2",
+    "standard-version": "9.3.1",
+    "ts-node": "^10.2.0",
+    "typescript": "^4.3.5"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS && ./configGit/changeId.sh $HUSKY_GIT_PARAMS",
+      "post-merge": "npm install",
+      "post-checkout": "npm install"
+    }
+  },
+  "keywords": [
+    "ARM",
+    "elf",
+    "parser"
+  ],
+  "license": "SEE LICENSE IN LICENSE.md",
+  "lint-staged": {
+    "*.json": [
+      "prettier --write",
+      "git add"
+    ],
+    "*.ts": [
+      "prettier --write",
+      "eslint --fix",
+      "git add"
+    ]
+  },
+  "main": "dist/index.js",
+  "name": "@stm32/stm32cubemonitor-elfparser",
+  "nyc": {
+    "extension": [
+      ".ts",
+      ".tsx"
+    ],
+    "exclude": [
+      "**/*.d.ts",
+      "**/*.js",
+      "**/*_spec.ts"
+    ],
+    "reporter": [
+      "html"
+    ],
+    "all": true
+  },
+  "productName": "STMicroelectronics .elf files Parser",
+  "repository": {
+    "type": "git",
+    "url": "ssh://gitolite@codex.cro.st.com/cubemonitor/node-elfparser.git"
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "concurrently --kill-others-on-fail \"npm run clean:json\" \"npm run clean:ts\"",
+    "clean:json": "npm run prettier:json",
+    "clean:ts": "npm run prettier:ts && npm run lint:ts",
+    "lint:ts": "eslint src/*.ts test/*.ts --fix",
+    "prettier:json": "prettier *.json --write",
+    "prettier:ts": "prettier src/*.ts test/*.ts --write",
+    "release": "standard-version",
+    "run:dev": "ts-node ./src/index.ts",
+    "test": "mocha -r ts-node/register \"test/*_spec.ts\" --timeout 100000",
+    "test-report": "nyc --reporter=html --reporter=text mocha -r ts-node/register \"test/*_spec.ts\" --timeout 100000",
+    "watch:build": "tsc -w"
+  },
+  "version": "1.2.0"
+}
