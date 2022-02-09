@@ -488,6 +488,8 @@ export class ElfParser {
           for (const element of entry.identifiersList) {
             if (element.type === undefined) {
               this.sendCommandToGdb(this.GDB_GET_TYPE_HEAD + element.identifier + this.GDB_GET_TYPE_TAIL);
+            } else if (element.type[0] === "?") {
+              this.sendCommandToGdb(this.GDB_GET_TYPE_HEAD + element.type.substring(1) + this.GDB_GET_TYPE_TAIL);
             }
           }
         }
@@ -560,7 +562,7 @@ export class ElfParser {
 
         switch (informationType) {
           case InformationType.TYPE:
-            if (element.type === undefined) {
+            if (element.type === undefined || element.type[0] === "?") {
               identifierFound = true;
               element.type = extractType(
                 this.gdbVariablesInfo,

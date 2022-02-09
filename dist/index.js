@@ -25,7 +25,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ElfParser = exports.Status = void 0;
 const stm32cubemonitor_logger_1 = require("@stm32/stm32cubemonitor-logger");
-const logger = stm32cubemonitor_logger_1.getLogger("elfparser");
+const logger = (0, stm32cubemonitor_logger_1.getLogger)("elfparser");
 const child_process_1 = require("child_process");
 const fs_1 = require("fs");
 const path = __importStar(require("path"));
@@ -139,7 +139,7 @@ class ElfParser {
         this.expandTableElements = expandTableElements;
         this.progressCallback = progressCallback;
         // Return one error if eflFilename does not exist
-        if (!fs_1.existsSync(elfFilename)) {
+        if (!(0, fs_1.existsSync)(elfFilename)) {
             status = Status.ELFPARSER_ELFFILENAME_NOT_FOUND;
         }
         else if (this.currentState !== State.IDLE) {
@@ -162,7 +162,7 @@ class ElfParser {
             // the gdb binaries are not inside the asar pack. Update the path to use unpacked
             const gdbExec = path.join(__dirname, "..", "bin", gdbExecName).replace("app.asar", "app.asar.unpacked");
             this.currentState = State.START_GDB;
-            this.gdbProcess = child_process_1.spawn(gdbExec, [elfFilename], { stdio: ["pipe"] });
+            this.gdbProcess = (0, child_process_1.spawn)(gdbExec, [elfFilename], { stdio: ["pipe"] });
             // Set stdio pipe listeners
             logger.trace("Set listeners");
             this.gdbProcess.stdout.on("data", (data) => {
@@ -240,7 +240,7 @@ class ElfParser {
                 case State.GET_VARIABLES_INFO:
                     // Information of variables (of first level) has been returned by GDB
                     // Start building gdbVariablesInfo
-                    this.gdbVariablesInfo = gdbInfoDecoder_1.parseGdbVariablesInfo(gdbResponse, this.expandTableElements);
+                    this.gdbVariablesInfo = (0, gdbInfoDecoder_1.parseGdbVariablesInfo)(gdbResponse, this.expandTableElements);
                     if (this.gdbVariablesInfo.length === 0) {
                         // No global variable has been detected by GDB in the elf file
                         // Request to quit GDB
@@ -382,6 +382,9 @@ class ElfParser {
                         if (element.type === undefined) {
                             this.sendCommandToGdb(this.GDB_GET_TYPE_HEAD + element.identifier + this.GDB_GET_TYPE_TAIL);
                         }
+                        else if (element.type[0] === "?") {
+                            this.sendCommandToGdb(this.GDB_GET_TYPE_HEAD + element.type.substring(1) + this.GDB_GET_TYPE_TAIL);
+                        }
                     }
                 }
                 this.sendCommandToGdb("StopRequestType\n");
@@ -435,9 +438,9 @@ class ElfParser {
                 element = this.gdbVariablesInfo[filenameIndex].identifiersList[identifiersListIndex];
                 switch (informationType) {
                     case InformationType.TYPE:
-                        if (element.type === undefined) {
+                        if (element.type === undefined || element.type[0] === "?") {
                             identifierFound = true;
-                            element.type = gdbInfoDecoder_1.extractType(this.gdbVariablesInfo, this.newGdbVariablesInfo, this.gdbVariablesInfo[filenameIndex].filename, gdbResponse
+                            element.type = (0, gdbInfoDecoder_1.extractType)(this.gdbVariablesInfo, this.newGdbVariablesInfo, this.gdbVariablesInfo[filenameIndex].filename, gdbResponse
                                 .substring(this.GDB_RESP_TYPE_HEAD.length, gdbResponse.length - this.GDB_PROMPT.length)
                                 .trim(), element.identifier, element.classHierarchy, this.expandTableElements);
                         }
@@ -446,14 +449,14 @@ class ElfParser {
                         if (element.typeValue === undefined) {
                             identifierFound = true;
                             if (element.type !== undefined) {
-                                element.typeValue = gdbInfoDecoder_1.computeTypeValue(element.type, gdbResponse.substring(0, gdbResponse.length - this.GDB_PROMPT.length).trim());
+                                element.typeValue = (0, gdbInfoDecoder_1.computeTypeValue)(element.type, gdbResponse.substring(0, gdbResponse.length - this.GDB_PROMPT.length).trim());
                             }
                         }
                         break;
                     case InformationType.ADDRESS:
                         if (element.address === undefined) {
                             identifierFound = true;
-                            element.address = gdbInfoDecoder_1.extractAddress(gdbResponse.substring(0, gdbResponse.length - this.GDB_PROMPT.length).trim());
+                            element.address = (0, gdbInfoDecoder_1.extractAddress)(gdbResponse.substring(0, gdbResponse.length - this.GDB_PROMPT.length).trim());
                         }
                         break;
                     default:

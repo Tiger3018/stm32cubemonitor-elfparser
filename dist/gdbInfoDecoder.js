@@ -9,7 +9,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.extractAddress = exports.computeTypeValue = exports.extractType = exports.parseGdbVariablesInfo = exports.checkClassRecursion = void 0;
 const stm32cubemonitor_logger_1 = require("@stm32/stm32cubemonitor-logger");
-const logger = stm32cubemonitor_logger_1.getLogger("elfparser");
+const logger = (0, stm32cubemonitor_logger_1.getLogger)("elfparser");
 const os_1 = __importDefault(require("os"));
 /**
  * Type used to convert "type string" (returned by GDB) to "type value" sent to readElf caller
@@ -291,6 +291,7 @@ function extractType(variablesInfo, newVariablesInfo, filename, expr, rootIdenti
     logger.trace("filename = ", filename, ", expr = ", expr, ", rootIdentifier = ", rootIdentifier, ",bExpandTableElements = ", bExpandTableElements);
     let tmpStr;
     let firstOpenBrace;
+    let firstColon;
     let closeBraceIdx;
     let hierarchy = "";
     // Suppress leading and trailing spaces
@@ -300,6 +301,7 @@ function extractType(variablesInfo, newVariablesInfo, filename, expr, rootIdenti
     // struct and union types can not be resolved, but instead fields are expanded
     if (tmpStr.startsWith("struct ") || tmpStr.startsWith("union ") || tmpStr.startsWith("class ")) {
         firstOpenBrace = tmpStr.indexOf("{");
+        firstColon = tmpStr.indexOf(":");
         if (firstOpenBrace === -1) {
             // The expression does not contain the structure body => failure
             logger.error("Can not match opened brace in ", tmpStr);
@@ -308,7 +310,7 @@ function extractType(variablesInfo, newVariablesInfo, filename, expr, rootIdenti
         else {
             if (tmpStr.startsWith("class ")) {
                 // update the class hierarchy and check there is no recursion
-                const className = tmpStr.substring(5, firstOpenBrace).trim();
+                const className = tmpStr.substring(5, firstColon === -1 ? firstOpenBrace : firstColon).trim();
                 if (checkClassRecursion(rootHierarchy || "", className) === true) {
                     // the class is using recursive definition, do not parse it.
                     return "";
@@ -370,6 +372,15 @@ function extractType(variablesInfo, newVariablesInfo, filename, expr, rootIdenti
                         classHierarchy: hierarchy,
                         identifier: newEntry.identifier
                     });
+                }
+                if (tmpStr.startsWith("class ") && firstColon !== -1) {
+                    const baseClassesList = tmpStr.substring(firstColon + 1, firstOpenBrace).split(",");
+                    for (const newEntry of baseClassesList) {
+                        variableInfo.identifiersList.push({
+                            type: "?" + removeStorageClassSpecifier(newEntry.trim()).trim(),
+                            identifier: rootIdentifier
+                        });
+                    }
                 }
                 return "";
             }
@@ -546,6 +557,8 @@ function removeStorageClassSpecifier(expr) {
     const STATIC_MARKER = "static ";
     const VOLATILE_MARKER = "volatile ";
     const CONST_MARKER = "const ";
+    const PUBLIC_MARKER = "public ";
+    // const CONST_MARKER: string = "const ";
     let tmpStr = expr;
     // Ignore storage class specifier, if any. Use a loop in order to get rid of the order.
     let bStorageClassFound = true;
@@ -565,6 +578,10 @@ function removeStorageClassSpecifier(expr) {
         }
         if (tmpStr.startsWith(CONST_MARKER)) {
             tmpStr = tmpStr.substring(CONST_MARKER.length);
+            bStorageClassFound = true;
+        }
+        if (tmpStr.startsWith(PUBLIC_MARKER)) {
+            tmpStr = tmpStr.substring(PUBLIC_MARKER.length);
             bStorageClassFound = true;
         }
     }

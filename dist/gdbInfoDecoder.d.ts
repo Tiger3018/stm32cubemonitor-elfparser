@@ -3,21 +3,21 @@
  * Copyright(c) 2019 STMicroelectronics
  */
 interface IGdbVariableInfo {
-  /** file name in which is located the identifier */
-  filename: string;
-  /** Identifiers list */
-  identifiersList: Array<{
-    /** Identifier name */
-    identifier: string;
-    /** Identifier type */
-    type?: string;
-    /** Identifier value (see enum TYPE_VALUE) */
-    typeValue?: number;
-    /** Identifier address */
-    address?: string;
-    /** Identifier address */
-    classHierarchy?: string;
-  }>;
+    /** file name in which is located the identifier */
+    filename: string;
+    /** Identifiers list */
+    identifiersList: Array<{
+        /** Identifier name */
+        identifier: string;
+        /** Identifier type */
+        type?: string;
+        /** Identifier value (see enum TYPE_VALUE) */
+        typeValue?: number;
+        /** Identifier address */
+        address?: string;
+        /** Identifier address */
+        classHierarchy?: string;
+    }>;
 }
 export declare type TgdbVariablesInfo = IGdbVariableInfo[];
 /**
@@ -47,15 +47,7 @@ export declare function parseGdbVariablesInfo(data: string, expandTableElements:
  * @param bExpandTableElements - indicates if the array information should be limited to the first element or not
  * @returns string - extracted type
  */
-export declare function extractType(
-  variablesInfo: TgdbVariablesInfo,
-  newVariablesInfo: TgdbVariablesInfo,
-  filename: string,
-  expr: string,
-  rootIdentifier: string,
-  rootHierarchy: string,
-  bExpandTableElements: boolean
-): string;
+export declare function extractType(variablesInfo: TgdbVariablesInfo, newVariablesInfo: TgdbVariablesInfo, filename: string, expr: string, rootIdentifier: string, rootHierarchy: string, bExpandTableElements: boolean): string;
 /**
  * Service to compute the type value returned to elf parser client.
  * @param expr - input type returned by GDB (following C-grammar)

@@ -364,6 +364,7 @@ export function extractType(
   );
   let tmpStr: string;
   let firstOpenBrace: number;
+  let firstColon: number;
   let closeBraceIdx: number;
   let hierarchy: string = "";
 
@@ -376,6 +377,7 @@ export function extractType(
   // struct and union types can not be resolved, but instead fields are expanded
   if (tmpStr.startsWith("struct ") || tmpStr.startsWith("union ") || tmpStr.startsWith("class ")) {
     firstOpenBrace = tmpStr.indexOf("{");
+    firstColon = tmpStr.indexOf(":");
     if (firstOpenBrace === -1) {
       // The expression does not contain the structure body => failure
       logger.error("Can not match opened brace in ", tmpStr);
@@ -383,7 +385,7 @@ export function extractType(
     } else {
       if (tmpStr.startsWith("class ")) {
         // update the class hierarchy and check there is no recursion
-        const className: string = tmpStr.substring(5, firstOpenBrace).trim();
+        const className: string = tmpStr.substring(5, firstColon === -1 ? firstOpenBrace : firstColon).trim();
 
         if (checkClassRecursion(rootHierarchy || "", className) === true) {
           // the class is using recursive definition, do not parse it.
@@ -448,6 +450,16 @@ export function extractType(
             classHierarchy: hierarchy,
             identifier: newEntry.identifier
           });
+        }
+
+        if (tmpStr.startsWith("class ") && firstColon !== -1) {
+          const baseClassesList: string[] = tmpStr.substring(firstColon + 1, firstOpenBrace).split(",");
+          for (const newEntry of baseClassesList) {
+            variableInfo.identifiersList.push({
+              type: "?" + removeStorageClassSpecifier(newEntry.trim()).trim(),
+              identifier: rootIdentifier
+            });
+          }
         }
 
         return "";
@@ -641,6 +653,8 @@ function removeStorageClassSpecifier(expr: string): string {
   const STATIC_MARKER: string = "static ";
   const VOLATILE_MARKER: string = "volatile ";
   const CONST_MARKER: string = "const ";
+  const PUBLIC_MARKER: string = "public ";
+  // const CONST_MARKER: string = "const ";
 
   let tmpStr: string = expr;
 
@@ -662,6 +676,10 @@ function removeStorageClassSpecifier(expr: string): string {
     }
     if (tmpStr.startsWith(CONST_MARKER)) {
       tmpStr = tmpStr.substring(CONST_MARKER.length);
+      bStorageClassFound = true;
+    }
+    if (tmpStr.startsWith(PUBLIC_MARKER)) {
+      tmpStr = tmpStr.substring(PUBLIC_MARKER.length);
       bStorageClassFound = true;
     }
   }
