@@ -364,7 +364,7 @@ export function extractType(
   );
   let tmpStr: string;
   let firstOpenBrace: number;
-  let firstColon: number;
+  let firstColonLeadingSpace: number;
   let closeBraceIdx: number;
   let hierarchy: string = "";
 
@@ -377,7 +377,7 @@ export function extractType(
   // struct and union types can not be resolved, but instead fields are expanded
   if (tmpStr.startsWith("struct ") || tmpStr.startsWith("union ") || tmpStr.startsWith("class ")) {
     firstOpenBrace = tmpStr.indexOf("{");
-    firstColon = tmpStr.indexOf(":");
+    firstColonLeadingSpace = tmpStr.indexOf(" : ");
     if (firstOpenBrace === -1) {
       // The expression does not contain the structure body => failure
       logger.error("Can not match opened brace in ", tmpStr);
@@ -385,7 +385,9 @@ export function extractType(
     } else {
       if (tmpStr.startsWith("class ")) {
         // update the class hierarchy and check there is no recursion
-        const className: string = tmpStr.substring(5, firstColon === -1 ? firstOpenBrace : firstColon).trim();
+        const className: string = tmpStr
+          .substring(5, firstColonLeadingSpace === -1 ? firstOpenBrace : firstColonLeadingSpace)
+          .trim();
 
         if (checkClassRecursion(rootHierarchy || "", className) === true) {
           // the class is using recursive definition, do not parse it.
@@ -452,11 +454,14 @@ export function extractType(
           });
         }
 
-        if (tmpStr.startsWith("class ") && firstColon !== -1) {
-          const baseClassesList: string[] = tmpStr.substring(firstColon + 1, firstOpenBrace).split(",");
-          for (const newEntry of baseClassesList) {
+        if (tmpStr.startsWith("class ") && firstColonLeadingSpace !== -1) {
+          const regexInherit = /\s*([^<\[,]+)((<.*?>)?\s*(\[.*?\])?\s*($|,))/gs;
+          const baseClassStr = tmpStr.substring(firstColonLeadingSpace + 2, firstOpenBrace);
+          let baseClassArray: RegExpExecArray;
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          while ((baseClassArray = regexInherit.exec(baseClassStr)!) !== null) {
             variableInfo.identifiersList.push({
-              type: "?" + removeStorageClassSpecifier(newEntry.trim()).trim(),
+              type: "?" + removeScopeClassSpecifier(baseClassArray[1].trim()).trim(),
               identifier: rootIdentifier
             });
           }
@@ -653,8 +658,6 @@ function removeStorageClassSpecifier(expr: string): string {
   const STATIC_MARKER: string = "static ";
   const VOLATILE_MARKER: string = "volatile ";
   const CONST_MARKER: string = "const ";
-  const PUBLIC_MARKER: string = "public ";
-  // const CONST_MARKER: string = "const ";
 
   let tmpStr: string = expr;
 
@@ -678,12 +681,33 @@ function removeStorageClassSpecifier(expr: string): string {
       tmpStr = tmpStr.substring(CONST_MARKER.length);
       bStorageClassFound = true;
     }
-    if (tmpStr.startsWith(PUBLIC_MARKER)) {
-      tmpStr = tmpStr.substring(PUBLIC_MARKER.length);
-      bStorageClassFound = true;
-    }
   }
 
   logger.trace("Without storage class specifier = ", tmpStr);
+  return tmpStr;
+}
+
+function removeScopeClassSpecifier(expr: string): string {
+  logger.trace("expr = ", expr);
+  const PUBLIC_MARKER: string = "public ";
+  const PROTECTED_MARKER: string = "protected ";
+  const PRIVATE_MARKER: string = "private ";
+  const markerList = [PUBLIC_MARKER, PROTECTED_MARKER, PRIVATE_MARKER];
+
+  let tmpStr: string = expr;
+
+  // Ignore scope class specifier, if any. Use a loop in order to get rid of the order.
+  let bScopeClassFound: boolean = true;
+  while (bScopeClassFound === true) {
+    bScopeClassFound = false;
+    markerList.some((str) => {
+      if (tmpStr.startsWith(str)) {
+        tmpStr = tmpStr.substring(str.length);
+        bScopeClassFound = true;
+      }
+    });
+  }
+
+  logger.trace("Without scope class specifier = ", tmpStr);
   return tmpStr;
 }
